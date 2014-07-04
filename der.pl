@@ -1,13 +1,17 @@
 use strict;
 use warnings;
-
+use v5.10;
 use FindBin qw($Bin);
+
 use File::Slurp;
 
 my @octets = getOctets("$Bin\\text.txt");
+foreach my $octet (@octets) {
+	printOctet($octet);
+}
 
-$, = "\n";
-print @octets;
+#$, = "\n";
+#print @octets;
 
 sub getOctets {
 	my $filename = shift;
@@ -21,4 +25,8 @@ sub getOctets {
 
 sub printOctet {
 	my $octet = shift;
+	
+	my $letter = pack("B8", $octet);
+	#my $number = pack("C", $letter);
+	say "$octet $letter";
 }

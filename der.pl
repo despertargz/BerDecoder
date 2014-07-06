@@ -1,19 +1,21 @@
 use strict;
 use warnings;
+
 use v5.10;
 use FindBin qw($Bin);
 
 use File::Slurp;
+use Data::Dumper;
 
-my @octets = getOctets("$Bin\\text.txt");
-foreach my $octet (@octets) {
-	printOctet($octet);
+my $filename = "E:\\Projects\\Perl\\Der\\text.txt";
+my $scalarBytes = read_file($filename, binmode => ':raw');
+my $bytes = [ split('', $scalarBytes) ];
+
+for my $byte (@$bytes) {
+	say formatByte($byte);
 }
 
-#$, = "\n";
-#print @octets;
-
-sub getOctets {
+sub getTextOctets {
 	my $filename = shift;
 	
 	my $text = read_file($filename, binmode => ':raw');
@@ -23,10 +25,29 @@ sub getOctets {
 	return @octets;
 }
 
-sub printOctet {
+sub printOctetOld {
 	my $octet = shift;
 	
 	my $letter = pack("B8", $octet);
 	my $number = unpack("C", $letter);
 	say "$octet $letter $number";
+}
+
+sub formatByte {
+	my $byte = shift;
+
+	my $bitString = unpack("B8", $byte);
+	my $number = unpack("C", $byte);
+	my $letter = $byte;
+	
+	return "$bitString $letter $number";
+}
+
+sub decode {
+	my $bytes = shift;
+	foreach my $byte ($bytes) {
+		
+	}
+	
+	
 }

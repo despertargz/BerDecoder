@@ -6,14 +6,23 @@ use FindBin qw($Bin);
 
 use File::Slurp;
 use Data::Dumper;
+use MIME::Base64;
+
+#------------------------
 
 my $filename = "E:\\Projects\\Perl\\Der\\text.txt";
-my $scalarBytes = read_file($filename, binmode => ':raw');
-my $bytes = [ split('', $scalarBytes) ];
+my $certFile = "E:\\Projects\\Perl\\Der\\webtest.cer";
 
-for my $byte (@$bytes) {
-	say formatByte($byte);
-}
+my $pemContent = read_file($certFile);
+my $der = convertPemToDer($pemContent);
+write_file("E:\\Projects\\Perl\\Der\\webtest.der", $der);
+
+#my $scalarBytes = read_file($filename, binmode => ':raw');
+#my $bytes = [ split('', $scalarBytes) ];
+
+
+
+#------------------------
 
 sub getTextOctets {
 	my $filename = shift;
@@ -43,11 +52,31 @@ sub formatByte {
 	return "$bitString $letter $number";
 }
 
-sub decode {
+sub ber_getType {
+}
+
+sub ber_getLength {
+}
+
+sub ber_decode {
+	#arrayref
 	my $bytes = shift;
-	foreach my $byte ($bytes) {
-		
+	
+	my $bytesLength = @$bytes;
+	for (my $x = 0; $x <= $bytesLength; $x++) {
+		#@$bytes[$x];
 	}
 	
 	
+}
+
+sub convertPemToDer {
+	my $pem = shift;
+	
+	$pem =~ s/-----BEGIN CERTIFICATE-----//;
+	$pem =~ s/-----END CERTIFICATE-----//;
+	$pem =~ s/\n//g;
+	$pem =~ s/\r//g;
+	
+	return decode_base64($pem);
 }

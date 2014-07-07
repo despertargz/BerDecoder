@@ -10,16 +10,10 @@ use MIME::Base64;
 
 #------------------------
 
-my $filename = "E:\\Projects\\Perl\\Der\\text.txt";
-my $certFile = "E:\\Projects\\Perl\\Der\\webtest.cer";
-
-my $pemContent = read_file($certFile);
-my $der = convertPemToDer($pemContent);
-write_file("E:\\Projects\\Perl\\Der\\webtest.der", $der);
-
-#my $scalarBytes = read_file($filename, binmode => ':raw');
-#my $bytes = [ split('', $scalarBytes) ];
-
+my $filename = "E:\\Projects\\Perl\\Der\\webtest.der";
+my $scalarBytes = read_file($filename, binmode => ':raw');
+my @bytes = split('', $scalarBytes);
+ber_decode(\@bytes);
 
 
 #------------------------
@@ -34,14 +28,6 @@ sub getTextOctets {
 	return @octets;
 }
 
-sub printOctetOld {
-	my $octet = shift;
-	
-	my $letter = pack("B8", $octet);
-	my $number = unpack("C", $letter);
-	say "$octet $letter $number";
-}
-
 sub formatByte {
 	my $byte = shift;
 
@@ -53,6 +39,31 @@ sub formatByte {
 }
 
 sub ber_getType {
+	my $byte = shift;
+	my $octet = unpack("B8", $byte);
+	
+	my $classBits = substr($octet, 0, 2);
+	my $constructedBits = substr($octet, 2, 1);
+	my $tagBits = substr($octet, 3, 5);
+	
+	my $classMap = {
+		'00' => 'Universal',
+		'01' => 'Application',
+		'10' => 'Context-Specific',
+		'11' => 'Private'
+	};
+	
+	my $constructedMap = {
+		'0' => 'Primitive',
+		'1' => 'Constructed'
+	};
+	
+	my $type = {
+		$class => $classBits,
+		$constructed => $constructedBits,
+		$tag => 
+	};
+	
 }
 
 sub ber_getLength {
@@ -64,10 +75,20 @@ sub ber_decode {
 	
 	my $bytesLength = @$bytes;
 	for (my $x = 0; $x <= $bytesLength; $x++) {
-		#@$bytes[$x];
+		my $byte = $bytes->[$x];
+		my $type = ber_getType($byte);
 	}
 	
 	
+}
+
+
+sub printOctetOld {
+	my $octet = shift;
+	
+	my $letter = pack("B8", $octet);
+	my $number = unpack("C", $letter);
+	say "$octet $letter $number";
 }
 
 sub convertPemToDer {

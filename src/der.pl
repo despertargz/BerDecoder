@@ -10,7 +10,8 @@ use MIME::Base64;
 
 #------------------------
 
-my $filename = "E:\\Projects\\Perl\\Der\\webtest.der";
+my $filename = "$FindBin::Bin\\data\\webtest.der";
+print $filename;
 my $scalarBytes = read_file($filename, binmode => ':raw');
 my @bytes = split('', $scalarBytes);
 ber_decode(\@bytes);
@@ -41,6 +42,7 @@ sub formatByte {
 sub ber_getType {
 	my $byte = shift;
 	my $octet = unpack("B8", $byte);
+	say $octet;
 	
 	my $classBits = substr($octet, 0, 2);
 	my $constructedBits = substr($octet, 2, 1);
@@ -59,9 +61,9 @@ sub ber_getType {
 	};
 	
 	my $type = {
-		$class => $classBits,
-		$constructed => $constructedBits,
-		$tag => 
+		class => $classBits,
+		constructed => $constructedBits,
+		tag => 1
 	};
 	
 }
@@ -74,7 +76,7 @@ sub ber_decode {
 	my $bytes = shift;
 	
 	my $bytesLength = @$bytes;
-	for (my $x = 0; $x <= $bytesLength; $x++) {
+	for (my $x = 0; $x < $bytesLength; $x++) {
 		my $byte = $bytes->[$x];
 		my $type = ber_getType($byte);
 	}

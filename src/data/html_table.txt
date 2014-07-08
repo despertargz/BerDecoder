@@ -1,0 +1,198 @@
+<th>Name</th>
+<th>P/C</th>
+<th>Number (decimal)</th>
+<th>Number (hexadecimal)</th>
+</tr>
+<tr>
+<td>EOC (End-of-Content)</td>
+<td align="center">P</td>
+<td align="center">0</td>
+<td align="center">0</td>
+</tr>
+<tr>
+<td>BOOLEAN</td>
+<td align="center">P</td>
+<td align="center">1</td>
+<td align="center">1</td>
+</tr>
+<tr>
+<td>INTEGER</td>
+<td align="center">P</td>
+<td align="center">2</td>
+<td align="center">2</td>
+</tr>
+<tr>
+<td>BIT STRING</td>
+<td align="center">P/C</td>
+<td align="center">3</td>
+<td align="center">3</td>
+</tr>
+<tr>
+<td>OCTET STRING</td>
+<td align="center">P/C</td>
+<td align="center">4</td>
+<td align="center">4</td>
+</tr>
+<tr>
+<td>NULL</td>
+<td align="center">P</td>
+<td align="center">5</td>
+<td align="center">5</td>
+</tr>
+<tr>
+<td><a href="/wiki/Object_identifier" title="Object identifier">OBJECT IDENTIFIER</a></td>
+<td align="center">P</td>
+<td align="center">6</td>
+<td align="center">6</td>
+</tr>
+<tr>
+<td>Object Descriptor</td>
+<td align="center">P/C</td>
+<td align="center">7</td>
+<td align="center">7</td>
+</tr>
+<tr>
+<td>EXTERNAL</td>
+<td align="center">C</td>
+<td align="center">8</td>
+<td align="center">8</td>
+</tr>
+<tr>
+<td>REAL (float)</td>
+<td align="center">P</td>
+<td align="center">9</td>
+<td align="center">9</td>
+</tr>
+<tr>
+<td>ENUMERATED</td>
+<td align="center">P</td>
+<td align="center">10</td>
+<td align="center">A</td>
+</tr>
+<tr>
+<td>EMBEDDED PDV</td>
+<td align="center">C</td>
+<td align="center">11</td>
+<td align="center">B</td>
+</tr>
+<tr>
+<td><a href="/wiki/UTF-8" title="UTF-8">UTF8String</a></td>
+<td align="center">P/C</td>
+<td align="center">12</td>
+<td align="center">C</td>
+</tr>
+<tr>
+<td>RELATIVE-OID</td>
+<td align="center">P</td>
+<td align="center">13</td>
+<td align="center">D</td>
+</tr>
+<tr>
+<td>(reserved)</td>
+<td align="center">-</td>
+<td align="center">14</td>
+<td align="center">E</td>
+</tr>
+<tr>
+<td>(reserved)</td>
+<td align="center">-</td>
+<td align="center">15</td>
+<td align="center">F</td>
+</tr>
+<tr>
+<td>SEQUENCE and SEQUENCE OF</td>
+<td align="center">C</td>
+<td align="center">16</td>
+<td align="center">10</td>
+</tr>
+<tr>
+<td>SET and SET OF</td>
+<td align="center">C</td>
+<td align="center">17</td>
+<td align="center">11</td>
+</tr>
+<tr>
+<td>NumericString</td>
+<td align="center">P/C</td>
+<td align="center">18</td>
+<td align="center">12</td>
+</tr>
+<tr>
+<td><a href="/wiki/PrintableString" title="PrintableString">PrintableString</a></td>
+<td align="center">P/C</td>
+<td align="center">19</td>
+<td align="center">13</td>
+</tr>
+<tr>
+<td><a href="/wiki/ITU_T.61" title="ITU T.61">T61String</a></td>
+<td align="center">P/C</td>
+<td align="center">20</td>
+<td align="center">14</td>
+</tr>
+<tr>
+<td>VideotexString</td>
+<td align="center">P/C</td>
+<td align="center">21</td>
+<td align="center">15</td>
+</tr>
+<tr>
+<td><a href="/wiki/IA5String" title="IA5String" class="mw-redirect">IA5String</a></td>
+<td align="center">P/C</td>
+<td align="center">22</td>
+<td align="center">16</td>
+</tr>
+<tr>
+<td><a href="/wiki/Coordinated_Universal_Time" title="Coordinated Universal Time">UTCTime</a></td>
+<td align="center">P/C</td>
+<td align="center">23</td>
+<td align="center">17</td>
+</tr>
+<tr>
+<td><a href="/wiki/GeneralizedTime" title="GeneralizedTime">GeneralizedTime</a></td>
+<td align="center">P/C</td>
+<td align="center">24</td>
+<td align="center">18</td>
+</tr>
+<tr>
+<td>GraphicString</td>
+<td align="center">P/C</td>
+<td align="center">25</td>
+<td align="center">19</td>
+</tr>
+<tr>
+<td>VisibleString</td>
+<td align="center">P/C</td>
+<td align="center">26</td>
+<td align="center">1A</td>
+</tr>
+<tr>
+<td>GeneralString</td>
+<td align="center">P/C</td>
+<td align="center">27</td>
+<td align="center">1B</td>
+</tr>
+<tr>
+<td><a href="/wiki/Universal_Character_Set" title="Universal Character Set">UniversalString</a></td>
+<td align="center">P/C</td>
+<td align="center">28</td>
+<td align="center">1C</td>
+</tr>
+<tr>
+<td>CHARACTER STRING</td>
+<td align="center">P/C</td>
+<td align="center">29</td>
+<td align="center">1D</td>
+</tr>
+<tr>
+<td>BMPString</td>
+<td align="center">P/C</td>
+<td align="center">30</td>
+<td align="center">1E</td>
+</tr>
+<tr>
+<td>(use long-form)</td>
+<td align="center">-</td>
+<td align="center">31</td>
+<td align="center">1F</td>
+</tr>
+</table>

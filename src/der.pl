@@ -14,7 +14,13 @@ my $filename = "$FindBin::Bin\\data\\webtest.der";
 print $filename;
 my $scalarBytes = read_file($filename, binmode => ':raw');
 my @bytes = split('', $scalarBytes);
-ber_decode(\@bytes);
+#ber_decode(\@bytes);
+
+my $byte = pack("B*", "10000010");
+my $nByte = pack("B*", "11111111");
+my $nnByte = pack("B*", "01111110");
+my $bytes = [ $byte, $nByte, $nnByte ];
+print (ber_getLength($bytes));
 
 
 #------------------------
@@ -115,12 +121,14 @@ sub ber_getType {
 }
 
 sub ber_getLength {
-	my $byte = shift;
+	my $bytes = shift;
+	my $firstByte = shift $bytes;
 
-	my $bitString = unpack("B8", $byte);
+	my $bitString = unpack("B8", $firstByte);
+	say Dumper($bitString);
 
 	#calculate integer from bits 7-1 0[000000]
-	my $remainingBits = "0" . substr($bitString, 0, 7);
+	my $remainingBits = "0" . substr($bitString, 1, 7);
 	my $remainingLengthByte = pack("B8", $remainingBits);
 	my $remainingLengthNumber = unpack("C", $remainingLengthByte);
 
@@ -130,10 +138,35 @@ sub ber_getLength {
 		return $remainingLengthNumber;
 	}
 	else {
-		#UH-OH, long form. Now we have to do some work.
+		#UH-OH, long form. Now we have to do some work :(
+		#our 7 bit integer tells us how many remaining octects to string together to form our unsigned integer
+		#this means we can have an integer as large as 127 (max 7 bit number) * 8 bits per octet = 1016 bit integer.
+		#i've written this implementation to use a maximum of 64bit UNsigned integer, if your number is bigger than that...good luck.
+
 		my $octetBuilder = "";
+		say Dumper($remainingLengthNumber);
+		for (my $x = 0; $x < $remainingLengthNumber; $x++) {
+			say Dumper($x);
 
+			my $nextByte = shift $bytes;
+			my $nextBitString = unpack("B8", $nextByte);
+			#$octetBuilder .= $nextBitString; #big-endian
+			$octetBuilder = $nextBitString . $octetBuilder
+		}
 
+		#avoid using magic number
+		my $MAX_BIT_LENGTH = 32;
+		my $bitsShyOfMax = $MAX_BIT_LENGTH - (length $octetBuilder);
+		my $padding = ('0' x $bitsShyOfMax);
+		$octetBuilder = $octetBuilder . $padding;
+		say Dumper($octetBuilder);
+
+		my $longByte = pack("B*", $octetBuilder);
+
+		#bitstring is build with big-endian so we will use that to get the integer
+		my $longNumber = unpack("V", $longByte);
+
+		return $longNumber;
 	}
 }
 

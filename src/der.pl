@@ -10,7 +10,7 @@ use MIME::Base64;
 
 #------------------------
 
-my $filename = "$FindBin::Bin\\data\\webtest.der";
+my $filename = "$Bin\\data\\webtest.der";
 print $filename;
 my $scalarBytes = read_file($filename, binmode => ':raw');
 my @bytes = split('', $scalarBytes);

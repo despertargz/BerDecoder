@@ -1,4 +1,4 @@
- use strict;
+use strict;
 use warnings;
 
 use v5.10;
@@ -11,39 +11,26 @@ use MIME::Base64;
 #------------------------
 
 my $filename = "$Bin\\data\\webtest.der";
-print $filename;
-my $scalarBytes = read_file($filename, binmode => ':raw');
-my @bytes = split('', $scalarBytes);
-#ber_decode(\@bytes);
 
+my $scalarBytes = read_file($filename, binmode => ':raw');
+my @bytes = split //, $scalarBytes;
+my $berTokens = ber_decode(\@bytes);
+say Dumper($berTokens);
+
+
+=start
 my $byte = pack("B*", "10000010");
 my $nByte = pack("B*", "11111111");
-my $nnByte = pack("B*", "01111110");
+my $nnByte = pack("B*", "00000000");
 my $bytes = [ $byte, $nByte, $nnByte ];
 print (ber_getLength($bytes));
+=cut
+
+
 
 
 #------------------------
 
-sub getTextOctets {
-	my $filename = shift;
-
-	my $text = read_file($filename, binmode => ':raw');
-	my $onesAndZeros = unpack("B*", $text);
-	my @octets = ( $onesAndZeros =~ m/.{8}/g );
-
-	return @octets;
-}
-
-sub formatByte {
-	my $byte = shift;
-
-	my $bitString = unpack("B8", $byte);
-	my $number = unpack("C", $byte);
-	my $letter = $byte;
-
-	return "$bitString $letter $number";
-}
 
 sub ber_getTag {
 	my $number = shift;
@@ -125,7 +112,6 @@ sub ber_getLength {
 	my $firstByte = shift $bytes;
 
 	my $bitString = unpack("B8", $firstByte);
-	say Dumper($bitString);
 
 	#calculate integer from bits 7-1 0[000000]
 	my $remainingBits = "0" . substr($bitString, 1, 7);
@@ -141,30 +127,29 @@ sub ber_getLength {
 		#UH-OH, long form. Now we have to do some work :(
 		#our 7 bit integer tells us how many remaining octects to string together to form our unsigned integer
 		#this means we can have an integer as large as 127 (max 7 bit number) * 8 bits per octet = 1016 bit integer.
-		#i've written this implementation to use a maximum of 64bit UNsigned integer, if your number is bigger than that...good luck.
+		#i've written this implementation to use a maximum of 32bit unsigned integer, if your number is bigger than that...good luck.
 
 		my $octetBuilder = "";
-		say Dumper($remainingLengthNumber);
-		for (my $x = 0; $x < $remainingLengthNumber; $x++) {
-			say Dumper($x);
 
+		#no c-style for loops here....
+		say "calculating length for $remainingLengthNumber octets";
+		foreach (1..$remainingLengthNumber) {
 			my $nextByte = shift $bytes;
 			my $nextBitString = unpack("B8", $nextByte);
-			#$octetBuilder .= $nextBitString; #big-endian
-			$octetBuilder = $nextBitString . $octetBuilder
+			$octetBuilder .= $nextBitString;
 		}
 
-		#avoid using magic number
+		#todo: make constant or readonly
 		my $MAX_BIT_LENGTH = 32;
 		my $bitsShyOfMax = $MAX_BIT_LENGTH - (length $octetBuilder);
 		my $padding = ('0' x $bitsShyOfMax);
-		$octetBuilder = $octetBuilder . $padding;
-		say Dumper($octetBuilder);
+		$octetBuilder = $padding . $octetBuilder;
 
 		my $longByte = pack("B*", $octetBuilder);
 
-		#bitstring is build with big-endian so we will use that to get the integer
-		my $longNumber = unpack("V", $longByte);
+		#bitstring is built with big-endian so we will use that to get the integer
+		my $longNumber = unpack("N", $longByte);
+		say "octetBuilder: $octetBuilder";
 
 		return $longNumber;
 	}
@@ -173,14 +158,86 @@ sub ber_getLength {
 sub ber_decode {
 	#arrayref
 	my $bytes = shift;
+	say "starting with " . scalar(@$bytes);
 
-	my $bytesLength = @$bytes;
-	for (my $x = 0; $x < $bytesLength; $x++) {
-		my $byte = $bytes->[$x];
+	my $berTokens = [];
+
+	while (@$bytes) {
+		my $byte = shift @$bytes;
+		#say Dumper($byte);
+
 		my $type = ber_getType($byte);
-		say Dumper($type);
+		#say "type > " . Dumper($type);
+
+		my $length = ber_getLength($bytes);
+
+		my @valueRaw = splice @$bytes, 0, $length;
+
+        my $value;
+        if ($type->{constructed} eq "Constructed") {
+            $value = ber_decode(\@valueRaw);
+        }
+        else {
+            my $joinedValue = join '', @valueRaw;
+            $value = unpack 'H*', $joinedValue;
+        }
+
+		my $berToken = {
+			type => $type,
+			length => $length,
+			value => $value
+		};
+
+		#say Dumper($berToken);
+		#say scalar(@$bytes) . " left";
+		push @$berTokens, $berToken;
 	}
 
+	return $berTokens;
+}
+
+sub convertFromVLQ {
+    #arrayRef
+    my $bytes = shift;
+
+    my $firstByte = shift @$bytes;
+    my $bitString = unpack "B*", $firstByte;
+    say $bitString;
+
+    my $firstBit = substr $bitString, 0, 1;
+    my $remainingBits = substr $bitString, 1, 7;
+
+    my $remainingByte = pack "B*", '0' . $remainingBits;
+    my $remainingInt = unpack "C", $remainingByte;
+
+    if ($firstBit eq '0') {
+        return $remainingInt;
+    }
+    else {
+        my $bitBuilder = $remainingBits;
+
+        # breaks when most significant bit is 0
+        my $nextFirstBit = "1";
+        while ($nextFirstBit eq "1") {
+            my $nextByte = shift @$bytes;
+            my $nextBits = unpack "B*", $nextByte;
+
+            $nextFirstBit = substr $nextBits, 0, 1;
+            my $nextSevenBits = substr $nextBits, 1, 7;
+
+            $bitBuilder .= $nextSevenBits;
+        }
+
+        my $MAX_BITS = 32;
+        my $missingBits = $MAX_BITS - (length $bitBuilder);
+        my $padding = 0 x $missingBits;
+        $bitBuilder = $padding . $bitBuilder;
+
+        say "long form:" . $bitBuilder;
+        my $finalByte = pack "B*", $bitBuilder;
+        my $finalNumber = unpack "N", $finalByte;
+        return $finalNumber;
+    }
 
 }
 

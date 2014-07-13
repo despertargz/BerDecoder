@@ -16,8 +16,10 @@ sub formatByte {
 	my $byte = shift;
 
 	my $bitString = unpack("B8", $byte);
-	my $number = unpack("C", $byte);
-	my $letter = $byte;
 
-	return "$bitString $letter $number";
+	#todo: add flag to display number and letter of byte
+	#my $number = unpack("C", $byte);
+	#my $letter = $byte;
+
+	return $bitString;
 }

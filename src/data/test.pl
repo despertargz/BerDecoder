@@ -6,19 +6,27 @@ my $hex = "2a864886f70d010105";
 my $byteText = pack "H*", $hex;
 my @bytes = split //, $byteText;
 
+my $oid = getOid(@bytes);
+print $oid;
 
-while (@bytes) {
-    my $num = convertFromVLQ(\@bytes);
-    say $num;
+
+sub getOid {
+    my $bytes = shift;
+
+    my @finalBytes = ();
+    while (@bytes) {
+        my $num = convertFromVLQ(\@bytes);
+        push @finalBytes, $num;
+    }
+
+    return join '.', @finalBytes;
 }
 
 sub convertFromVLQ {
-    #arrayRef
     my $bytes = shift;
 
     my $firstByte = shift @$bytes;
     my $bitString = unpack "B*", $firstByte;
-    say $bitString;
 
     my $firstBit = substr $bitString, 0, 1;
     my $remainingBits = substr $bitString, 1, 7;
@@ -32,7 +40,6 @@ sub convertFromVLQ {
     else {
         my $bitBuilder = $remainingBits;
 
-        # breaks when most significant bit is 0
         my $nextFirstBit = "1";
         while ($nextFirstBit eq "1") {
             my $nextByte = shift @$bytes;
@@ -49,12 +56,10 @@ sub convertFromVLQ {
         my $padding = 0 x $missingBits;
         $bitBuilder = $padding . $bitBuilder;
 
-        say "long form:" . $bitBuilder;
         my $finalByte = pack "B*", $bitBuilder;
         my $finalNumber = unpack "N", $finalByte;
         return $finalNumber;
     }
-
 }
 
 =start

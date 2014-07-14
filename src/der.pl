@@ -155,9 +155,29 @@ sub ber_getLength {
 	}
 }
 
+sub ber_getValue {
+    my $type = shift; #class berType
+    my $bytes = shift; #arrayRef<byte>
+
+    my $value;
+    if ($type->{constructed} eq "Constructed") {
+        $value = ber_decode($bytes);
+    }
+    elsif ($type->{tag} eq "OBJECT IDENTIFIER") {
+        $value = getOid($bytes);
+    }
+    else {
+        #dont know how to decode, just return hex representation
+        my $joinedValue = join '', @$bytes;
+        $value = unpack 'H*', $joinedValue;
+    }
+
+    return $value;
+}
+
 sub ber_decode {
-	#arrayref
-	my $bytes = shift;
+	my $bytes = shift; #arrayref
+
 	say "starting with " . scalar(@$bytes);
 
 	my $berTokens = [];
@@ -172,15 +192,7 @@ sub ber_decode {
 		my $length = ber_getLength($bytes);
 
 		my @valueRaw = splice @$bytes, 0, $length;
-
-        my $value;
-        if ($type->{constructed} eq "Constructed") {
-            $value = ber_decode(\@valueRaw);
-        }
-        else {
-            my $joinedValue = join '', @valueRaw;
-            $value = unpack 'H*', $joinedValue;
-        }
+        my $value = ber_getValue($type, \@valueRaw);
 
 		my $berToken = {
 			type => $type,
@@ -199,9 +211,17 @@ sub ber_decode {
 sub getOid {
     my $bytes = shift;
 
-    my @finalBytes = ();
-    while (@bytes) {
-        my $num = convertFromVLQ(\@bytes);
+    #first 2 nodes are 'special';
+    use integer;
+    my $firstByte = shift @$bytes;
+    my $number = unpack "C", $firstByte;
+    my $nodeFirst = $number / 40;
+    my $nodeSecond = $number % 40;
+
+    my @finalBytes = ($nodeFirst, $nodeSecond);
+
+    while (@$bytes) {
+        my $num = convertFromVLQ($bytes);
         push @finalBytes, $num;
     }
 

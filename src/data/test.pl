@@ -6,16 +6,23 @@ my $hex = "2a864886f70d010105";
 my $byteText = pack "H*", $hex;
 my @bytes = split //, $byteText;
 
-my $oid = getOid(@bytes);
-print $oid;
+my $oid = getOid(\@bytes);
+#print $oid;
+
+my $n = 42;
+
+use integer;
+say $n / 40;
+say $n % 40;
+
 
 
 sub getOid {
     my $bytes = shift;
 
     my @finalBytes = ();
-    while (@bytes) {
-        my $num = convertFromVLQ(\@bytes);
+    while (@$bytes) {
+        my $num = convertFromVLQ($bytes);
         push @finalBytes, $num;
     }
 

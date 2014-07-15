@@ -164,8 +164,11 @@ sub ber_getValue {
         $value = ber_decode($bytes);
     }
     elsif ($type->{tag} eq "OBJECT IDENTIFIER") {
-        $value = getOid($bytes);
+        $value = ber_content_getOid($bytes);
     }
+	elsif ($type->{tag} eq "UTF8String" || $type->{tag} eq "PrintableString" || $type->{tag} eq "BMPString") {
+		$value = ber_content_getStr($bytes);
+	}
     else {
         #dont know how to decode, just return hex representation
         my $joinedValue = join '', @$bytes;
@@ -208,7 +211,14 @@ sub ber_decode {
 	return $berTokens;
 }
 
-sub getOid {
+sub ber_content_getStr {
+	#arrayRef<byte>
+	my $bytes = shift;
+
+	return join '', @$bytes;
+}
+
+sub ber_content_getOid {
     my $bytes = shift;
 
     #first 2 nodes are 'special';

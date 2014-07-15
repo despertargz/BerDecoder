@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+use diagnostics;
 
 use v5.10;
 use FindBin qw($Bin);
@@ -15,7 +16,8 @@ my $filename = "$Bin\\data\\webtest.der";
 my $scalarBytes = read_file($filename, binmode => ':raw');
 my @bytes = split //, $scalarBytes;
 my $berTokens = ber_decode(\@bytes);
-say Dumper($berTokens);
+#say Dumper($berTokens);
+ber_formatter_format($berTokens);
 
 
 =start
@@ -105,6 +107,13 @@ sub ber_getType {
 		constructed => $constructedMap->{$constructedBits},
 		tag => $tagName
 	};
+
+	#If it is not universal, then we can't know tag type so set these to unknown
+	if ($type->{class} ne "Universal") {
+		$type->{tag} = "UNKNOWN";
+		$type->{constructed} = "Primitive";
+	}
+	return $type;
 }
 
 sub ber_getLength {
@@ -152,6 +161,28 @@ sub ber_getLength {
 		say "octetBuilder: $octetBuilder";
 
 		return $longNumber;
+	}
+}
+
+sub ber_formatter_format {
+	my $berTokens = shift;
+	my $indent = shift || 0;
+
+	my $tabs = " " x 4 x $indent;
+
+	#say Dumper($berTokens);
+	#say Dumper($berTokens->[0]);
+	#my @tokens = @$berTokens;
+
+	foreach my $token (@$berTokens) {
+		if ($token->{type}->{constructed} eq "Constructed") {
+			#print header for constructed values (if not printed it will just indent showing that it is a collection)
+			#say $tabs . "(" . $token->{type}->{class} . "|" . $token->{type}->{tag} . ") [" . $token->{length} . "] ";
+			ber_formatter_format($token->{value}, $indent + 1);
+		}
+		else {
+			say $tabs . "(" . $token->{type}->{class} . "|" . $token->{type}->{tag} . ") [" . $token->{length} . "] " . $token->{value};
+		}
 	}
 }
 

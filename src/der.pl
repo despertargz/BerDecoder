@@ -79,7 +79,6 @@ END
 sub ber_getType {
 	my $byte = shift;
 	my $octet = unpack("B8", $byte);
-	say $octet;
 
 	my $classBits = substr($octet, 0, 2); #[00]000000
 	my $constructedBits = substr($octet, 2, 1); #00[0]00000
@@ -110,7 +109,7 @@ sub ber_getType {
 
 	#If it is not universal, then we can't know tag type so set these to unknown
 	if ($type->{class} ne "Universal") {
-		$type->{tag} = "UNKNOWN";
+		$type->{tag} = "UNKNOWN ($octet)";
 		$type->{constructed} = "Primitive";
 	}
 	return $type;
@@ -141,7 +140,6 @@ sub ber_getLength {
 		my $octetBuilder = "";
 
 		#no c-style for loops here....
-		say "calculating length for $remainingLengthNumber octets";
 		foreach (1..$remainingLengthNumber) {
 			my $nextByte = shift $bytes;
 			my $nextBitString = unpack("B8", $nextByte);
@@ -158,7 +156,6 @@ sub ber_getLength {
 
 		#bitstring is built with big-endian so we will use that to get the integer
 		my $longNumber = unpack("N", $longByte);
-		say "octetBuilder: $octetBuilder";
 
 		return $longNumber;
 	}

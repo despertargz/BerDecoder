@@ -17,19 +17,7 @@ my $scalarBytes = read_file($filename, binmode => ':raw');
 my @bytes = split //, $scalarBytes;
 my $berTokens = ber_decode(\@bytes);
 #say Dumper($berTokens);
-ber_formatter_format($berTokens);
-
-
-=start
-my $byte = pack("B*", "10000010");
-my $nByte = pack("B*", "11111111");
-my $nnByte = pack("B*", "00000000");
-my $bytes = [ $byte, $nByte, $nnByte ];
-print (ber_getLength($bytes));
-=cut
-
-
-
+ber_formatter_format($berTokens, 1, 1);
 
 #------------------------
 
@@ -139,7 +127,7 @@ sub ber_getLength {
 
 		my $octetBuilder = "";
 
-		#no c-style for loops here....
+		#no c-style for-loops here....
 		foreach (1..$remainingLengthNumber) {
 			my $nextByte = shift $bytes;
 			my $nextBitString = unpack("B8", $nextByte);
@@ -163,22 +151,40 @@ sub ber_getLength {
 
 sub ber_formatter_format {
 	my $berTokens = shift;
+	my $printHeader = shift || 0;
+	my $groupOidWithValue = shift || 0;
 	my $indent = shift || 0;
 
-	my $tabs = " " x 4 x $indent;
 
-	#say Dumper($berTokens);
-	#say Dumper($berTokens->[0]);
-	#my @tokens = @$berTokens;
 
+	my $oidValue = 0;
 	foreach my $token (@$berTokens) {
+		#set each iteration for oid groupings
+		my $tabs = " " x 4 x $indent;
+
 		if ($token->{type}->{constructed} eq "Constructed") {
-			#print header for constructed values (if not printed it will just indent showing that it is a collection)
-			#say $tabs . "(" . $token->{type}->{class} . "|" . $token->{type}->{tag} . ") [" . $token->{length} . "] ";
-			ber_formatter_format($token->{value}, $indent + 1);
+			if ($printHeader == 1) {
+				say $tabs . "(" . $token->{type}->{class} . "|" . $token->{type}->{tag} . ") [" . $token->{length} . "] ";
+			}
+			ber_formatter_format($token->{value}, $printHeader, $groupOidWithValue, $indent + 1);
 		}
 		else {
-			say $tabs . "(" . $token->{type}->{class} . "|" . $token->{type}->{tag} . ") [" . $token->{length} . "] " . $token->{value};
+			#if this is an oid value, it should be beside the oid key and should not be tabbed.
+			if ($oidValue == 1) {
+				$tabs = "";
+				$oidValue = 0;
+			}
+
+			print $tabs . "(" . $token->{type}->{class} . "|" . $token->{type}->{tag} . ") [" . $token->{length} . "] " . $token->{value};
+
+			#end of line char
+			if ($groupOidWithValue == 1 && $token->{type}->{tag} eq "OBJECT IDENTIFIER") {
+				print " = ";
+				$oidValue = 1;
+			}
+			else {
+				print "\n";
+			}
 		}
 	}
 }
@@ -282,6 +288,7 @@ sub convertFromVLQ {
         return $remainingInt;
     }
     else {
+
         my $bitBuilder = $remainingBits;
 
         my $nextFirstBit = "1";

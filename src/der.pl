@@ -190,7 +190,7 @@ sub ber_formatter_format {
 }
 
 sub ber_getValue {
-    my $type = shift; #class berType
+    my $type = shift; #hashRef(berType)
     my $bytes = shift; #arrayRef<byte>
 
     my $value;
@@ -213,21 +213,15 @@ sub ber_getValue {
 }
 
 sub ber_decode {
-	my $bytes = shift; #arrayref
-
-	say "starting with " . scalar(@$bytes);
+	my $bytes = shift; #arrayRef<byte>
 
 	my $berTokens = [];
 
 	while (@$bytes) {
 		my $byte = shift @$bytes;
-		#say Dumper($byte);
 
 		my $type = ber_getType($byte);
-		#say "type > " . Dumper($type);
-
 		my $length = ber_getLength($bytes);
-
 		my @valueRaw = splice @$bytes, 0, $length;
         my $value = ber_getValue($type, \@valueRaw);
 
@@ -237,8 +231,6 @@ sub ber_decode {
 			value => $value
 		};
 
-		#say Dumper($berToken);
-		#say scalar(@$bytes) . " left";
 		push @$berTokens, $berToken;
 	}
 

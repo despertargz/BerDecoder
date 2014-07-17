@@ -11,12 +11,12 @@ use MIME::Base64;
 
 #------------------------
 
-my $filename = "$Bin\\data\\webtest.der";
+my $filename = "$Bin\\data\\iis.cer";
 
 my $scalarBytes = read_file($filename, binmode => ':raw');
 my @bytes = split //, $scalarBytes;
 my $berTokens = ber_decode(\@bytes);
-#say Dumper($berTokens);
+
 ber_formatter_format($berTokens, 1, 1);
 
 #------------------------
@@ -164,7 +164,7 @@ sub ber_formatter_format {
 
 		if ($token->{type}->{constructed} eq "Constructed") {
 			if ($printHeader == 1) {
-				say $tabs . "(" . $token->{type}->{class} . "|" . $token->{type}->{tag} . ") [" . $token->{length} . "] ";
+				say $tabs . "(". $token->{type}->{tag} . ", " . $token->{length}  . ")";
 			}
 			ber_formatter_format($token->{value}, $printHeader, $groupOidWithValue, $indent + 1);
 		}
@@ -175,7 +175,13 @@ sub ber_formatter_format {
 				$oidValue = 0;
 			}
 
-			print $tabs . "(" . $token->{type}->{class} . "|" . $token->{type}->{tag} . ") [" . $token->{length} . "] " . $token->{value};
+			#for 'universal' class use empty string as default
+			my $classToPrint = "";
+			if ($token->{type}->{class} ne "Universal") {
+				$classToPrint = $token->{type}->{class} . "|"
+			}
+
+			print $tabs . "[". $classToPrint . $token->{type}->{tag} . ", " . $token->{length} . "]: " . $token->{value};
 
 			#end of line char
 			if ($groupOidWithValue == 1 && $token->{type}->{tag} eq "OBJECT IDENTIFIER") {
@@ -200,7 +206,7 @@ sub ber_getValue {
     elsif ($type->{tag} eq "OBJECT IDENTIFIER") {
         $value = ber_content_getOid($bytes);
     }
-	elsif ($type->{tag} eq "UTF8String" || $type->{tag} eq "PrintableString" || $type->{tag} eq "BMPString") {
+	elsif ($type->{tag} eq "UTF8String" || $type->{tag} eq "PrintableString" || $type->{tag} eq "BMPString" || $type->{tag} eq "UTCTime") {
 		$value = ber_content_getStr($bytes);
 	}
     else {

@@ -92,7 +92,8 @@ sub ber_getType {
 	my $type = {
 		class => $classMap->{$classBits},
 		constructed => $constructedMap->{$constructedBits},
-		tag => $tagName
+		tag => $tagName,
+		bits => $octet
 	};
 
 	#If it is not universal, then we can't know tag type so set these to unknown
@@ -150,6 +151,7 @@ sub ber_getLength {
 }
 
 sub ber_formatter_format {
+
 	my $berTokens = shift;
 	my $printHeader = shift || 0;
 	my $groupOidWithValue = shift || 0;
@@ -177,9 +179,15 @@ sub ber_formatter_format {
 
 			#for 'universal' class use empty string as default
 			my $classToPrint = "";
+
+=to debug we want to print out universal
+=the next $classToPrint will be removed
 			if ($token->{type}->{class} ne "Universal") {
 				$classToPrint = $token->{type}->{class} . "|"
 			}
+=cut
+
+			$classToPrint = $token->{type}->{bits} . "|" . $token->{type}->{class};
 
 			print $tabs . "[". $classToPrint . $token->{type}->{tag} . ", " . $token->{length} . "]: " . $token->{value};
 
@@ -208,6 +216,9 @@ sub ber_getValue {
     }
 	elsif ($type->{tag} eq "UTF8String" || $type->{tag} eq "PrintableString" || $type->{tag} eq "BMPString" || $type->{tag} eq "UTCTime") {
 		$value = ber_content_getStr($bytes);
+	}
+	elsif ($type->{tag} eq "BIT STRING") {
+		$value = ber_content_getBitStr($bytes);
 	}
     else {
         #dont know how to decode, just return hex representation
@@ -243,6 +254,17 @@ sub ber_decode {
 	return $berTokens;
 }
 
+sub ber_content_getBitStr {
+	my $bytes = shift;
+
+	my $firstByte = shift @$bytes;
+	my $firstByteNum = unpack "C", $firstByte;
+
+	my $byteString = join '', @$bytes;
+	my $hex = unpack "H*", $byteString;
+	return "($firstByteNum)$hex";
+}
+
 sub ber_content_getStr {
 	#arrayRef<byte>
 	my $bytes = shift;
@@ -253,7 +275,7 @@ sub ber_content_getStr {
 sub ber_content_getOid {
     my $bytes = shift;
 
-    #first 2 nodes are 'special';
+    #first 2 nodes are 'special'
     use integer;
     my $firstByte = shift @$bytes;
     my $number = unpack "C", $firstByte;
@@ -279,10 +301,9 @@ sub convertFromVLQ {
     my $firstBit = substr $bitString, 0, 1;
     my $remainingBits = substr $bitString, 1, 7;
 
-    my $remainingByte = pack "B*", '0' . $remainingBits;
-    my $remainingInt = unpack "C", $remainingByte;
-
     if ($firstBit eq '0') {
+		my $remainingByte = pack "B*", '0' . $remainingBits;
+		my $remainingInt = unpack "C", $remainingByte;
         return $remainingInt;
     }
     else {

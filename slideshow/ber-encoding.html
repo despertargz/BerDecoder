@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>Introduction to BER Encoding</title>
+<!-- metadata -->
+<meta name="generator" content="S5" />
+<meta name="version" content="S5 1.1" />
+<meta name="presdate" content="20050728" />
+<meta name="author" content="Eric A. Meyer" />
+<meta name="company" content="Complex Spiral Consulting" />
+<!-- configuration parameters -->
+<meta name="defaultView" content="slideshow" />
+<meta name="controlVis" content="hidden" />
+<!-- style sheet links -->
+<link rel="stylesheet" href="ui/default/slides.css" type="text/css" media="projection" id="slideProj" />
+<link rel="stylesheet" href="ui/default/outline.css" type="text/css" media="screen" id="outlineStyle" />
+<link rel="stylesheet" href="ui/default/print.css" type="text/css" media="print" id="slidePrint" />
+<link rel="stylesheet" href="ui/default/opera.css" type="text/css" media="projection" id="operaFix" />
+<!-- S5 JS -->
+<script src="ui/default/slides.js" type="text/javascript"></script>
+
+<style>
+.mark { font-weight: bold; color: green; }
+</style>
+
+</head>
+<body>
+
+<div class="layout">
+<div id="controls"><!-- DO NOT EDIT --></div>
+<div id="currentSlide"><!-- DO NOT EDIT --></div>
+<div id="header"></div>
+<div id="footer">
+<h1>Houston Perl Mongers</h1>
+<h2>Introduction to BER Encoding</h2>
+</div>
+
+</div>
+
+
+<div class="presentation">
+
+<div class="slide">
+<h1>Introduction to BER Encoding</h1>
+<h3>Christopher Mevissen</h3>
+</div>
+
+
+<div class="slide">
+	<h1>What is it?</h1>
+	<ul class="incremental">
+		<li>Basic Encoding Rules</li>
+		<li>An encoding for ASN.1 structures</li>
+		<li>Allows ASN.1 structures to be represented in bytes which can be transmitted over a network or stored on a disk.</li>
+		<li>Binary encoding (vs textual encoding like JSON)
+		<li>Standardized in <a href="http://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf">X.690</a></li>
+	</ul>
+	<div class="handout">
+	</div>
+</div>
+<div class="slide">
+	<h1>ASN.1</h1>
+	<ul class="incremental">
+		<li>Abstract Syntax Notation One</li>
+		<li>A way of describing data</li>
+		<li>Primitive and Composite types</li>
+		<li>Independent of any programming language</li>
+		<li>Standardized in <a href="https://www.itu.int/ITU-T/studygroups/com17/languages/X.680-0207.pdf">X.680</a></li>
+	</ul>
+	<div class="handout">
+	</div>
+</div>
+<div class="slide">
+	<h1>Who?</h1>
+	<ul class="incremental">
+		<li>ITU-T - Telecommunication Standardization Sector of ITU ( International Telecommunication Union)</li>
+		<li>Coordinates standards for telecommunications.</li>
+		<li>The standardization work of ITU dates back to 1865 </li>
+	</ul>
+	<div class="handout">
+	</div>
+</div>
+<div class="slide">
+	<h1>TLV</h1>
+	<ul class="incremental">
+		<li>Type</li>
+		<li>Length</li>
+		<li>Value</li>
+	</ul>
+	<div class="handout">
+	</div>
+</div>
+<div class="slide">
+	<h1>Type - Class</h1>
+	<ul class="incremental">
+	<li>[00]000000 - First two bits represent the class</li>
+	<li>00 - Universal - The type is native to ASN.1</li>
+	<li>01 - Application - The type is only valid for one specific application</li>
+	<li>10 - Context-Specific - Items within a sequence or choice</li>
+	<li>11 - Private - Defined in private specifications</li>
+	</ul>
+	<div class="handout">
+	</div>
+</div>
+<div class="slide">
+	<h1>Type - Constructed</h1>
+	<ul class="incremental">
+	<li>00[0]00000</li>
+	<li>0 - Primitive - Integer, Boolean, String</li>
+	<li>1 - Constructed - Sequence, Set</li>
+	</ul>
+	<div class="handout">
+	</div>
+</div>
+<div class="slide">
+	<h1>Type - Tag</h1>
+	<ul class="incremental">
+	<li>000[00000]</li>
+	<li>Identifies the actual type</li>
+	<li>The previous 3 bits describe the type</li>
+	</ul>
+	<div class="handout">
+	</div>
+</div>
+<div class="slide">
+	<h1>Type - Native Types (1/2)</h1>
+	<ul>
+EOC (End-of-Content)<br>
+BOOLEAN - (00001)<br>
+<span class="mark">INTEGER - (00010)</span><br>
+<span class="mark">BIT STRING - (00011)</span><br>
+OCTET STRING<br>
+<span class="mark">NULL</span><br>
+<span class="mark">OBJECT IDENTIFIER</span><br>
+Object Descriptor<br>
+EXTERNAL<br>
+REAL (float)<br>
+ENUMERATED<br>
+EMBEDDED PDV<br>
+<span class="mark">UTF8String</span><br>
+RELATIVE-OID<br>
+	</ul>
+	<div class="handout">
+	</div>
+</div>
+
+<div class="slide">
+	<h1>Type - Native Types (2/2)</h1>
+	<ul>
+<span class="mark">SEQUENCE and SEQUENCE OF</span><br>
+SET and SET OF<br>
+NumericString<br>
+<span class="mark">PrintableString</span><br>
+T61String<br>
+VideotexString<br>
+IA5String<br>
+<span class="mark">UTCTime</span><br>
+GeneralizedTime<br>
+GraphicString<br>
+VisibleString<br>
+GeneralString<br>
+UniversalString<br>
+CHARACTER STRING<br>
+BMPString<br>
+(use long-form)<br>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>References</h1>
+	<ul>
+	</ul>
+	<div class="handout">
+	</div>
+</div>
+
+
+</div>
+
+</body>
+</html>

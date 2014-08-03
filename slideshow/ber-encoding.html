@@ -55,7 +55,8 @@
 		<li>Basic Encoding Rules</li>
 		<li>An encoding for ASN.1 structures</li>
 		<li>Allows ASN.1 structures to be represented in bytes which can be transmitted over a network or stored on a disk.</li>
-		<li>Binary encoding (vs textual encoding like JSON)
+		<li>Binary encoding (vs textual encoding like JSON/XML)</li>
+		<li>Not the only encoding for ASN.1 (XER)</li>
 		<li>Standardized in <a href="http://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf">X.690</a></li>
 	</ul>
 	<div class="handout">
@@ -82,6 +83,34 @@
 	</ul>
 	<div class="handout">
 	</div>
+</div>
+<div class="slide">
+	<h1>Where is ASN.1 used?</h1>
+	<ul class="incremental">
+		<li>Cell Phones</li>
+		<li>LDAP</li>
+		<li>X509 Certificate</li>
+		<li>Get cash from ATM</li>
+		<li>FedEx package tracking</li>
+	</ul>
+</div>
+<div class="slide">
+	<h1>Other areas ASN.1 is used</h1>
+	<ul>
+		Aviation<br>
+		Banking<br>
+		Biometrics<br>
+		Directory and LDAP<br>
+		Electronic cards and tags<br>
+		Energy<br>
+		Graphics and file transfer<br>
+		Health and genetics<br>
+		Intelligent networks<br>
+		Mobile telephony and wireless networks<br>
+		Security authentication and cryptography<br>
+		Teleconferencing and videoconferencing<br>
+		Transportation<br>
+	</ul>
 </div>
 <div class="slide">
 	<h1>TLV</h1>
@@ -128,47 +157,54 @@
 <div class="slide">
 	<h1>Type - Native Types (1/2)</h1>
 	<ul>
-EOC (End-of-Content)<br>
-BOOLEAN - (00001)<br>
-<span class="mark">INTEGER - (00010)</span><br>
-<span class="mark">BIT STRING - (00011)</span><br>
-OCTET STRING<br>
-<span class="mark">NULL</span><br>
-<span class="mark">OBJECT IDENTIFIER</span><br>
-Object Descriptor<br>
-EXTERNAL<br>
-REAL (float)<br>
-ENUMERATED<br>
-EMBEDDED PDV<br>
-<span class="mark">UTF8String</span><br>
-RELATIVE-OID<br>
+		EOC (End-of-Content)<br>
+		BOOLEAN - (00001)<br>
+		<span class="mark">INTEGER - (00010)</span><br>
+		<span class="mark">BIT STRING - (00011)</span><br>
+		OCTET STRING<br>
+		<span class="mark">NULL</span><br>
+		<span class="mark">OBJECT IDENTIFIER</span><br>
+		Object Descriptor<br>
+		EXTERNAL<br>
+		REAL (float)<br>
+		ENUMERATED<br>
+		EMBEDDED PDV<br>
+		<span class="mark">UTF8String</span><br>
+		RELATIVE-OID<br>
 	</ul>
-	<div class="handout">
-	</div>
 </div>
 
 <div class="slide">
 	<h1>Type - Native Types (2/2)</h1>
 	<ul>
-<span class="mark">SEQUENCE and SEQUENCE OF</span><br>
-SET and SET OF<br>
-NumericString<br>
-<span class="mark">PrintableString</span><br>
-T61String<br>
-VideotexString<br>
-IA5String<br>
-<span class="mark">UTCTime</span><br>
-GeneralizedTime<br>
-GraphicString<br>
-VisibleString<br>
-GeneralString<br>
-UniversalString<br>
-CHARACTER STRING<br>
-BMPString<br>
-(use long-form)<br>
+		<span class="mark">SEQUENCE and SEQUENCE OF</span><br>
+		SET and SET OF<br>
+		NumericString<br>
+		<span class="mark">PrintableString</span><br>
+		T61String<br>
+		VideotexString<br>
+		IA5String<br>
+		<span class="mark">UTCTime</span><br>
+		GeneralizedTime<br>
+		GraphicString<br>
+		VisibleString<br>
+		GeneralString<br>
+		UniversalString<br>
+		CHARACTER STRING<br>
+		BMPString<br>
+		(use long-form)<br>
 	</ul>
 </div>
-
+<div class="slide">
+	<h1>Length</h1>
+	<ul>
+		<li>Short Form - [0]XXXXXXX (0 - 127 bytes)</li>
+		<li>Long Form - [1]XXXXXXX (128 - 2^1016 bytes)</li>
+		<li>Indefinite Form - [1]0000000 </li>
+	</ul>
+	<div class="handout">
+	</div>
+</div>
 <div class="slide">
 	<h1>References</h1>
 	<ul>

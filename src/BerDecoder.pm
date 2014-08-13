@@ -1,25 +1,41 @@
 use strict;
 use warnings;
 use diagnostics;
-
 use v5.10;
-use FindBin qw($Bin);
 
-use File::Slurp;
 use Data::Dumper;
-use MIME::Base64;
 
-#------------------------
+package BerDecoder;
 
-my $filename = "$Bin\\data\\iis.cer";
+sub New {
+	return bless {};
+}
 
-my $scalarBytes = read_file($filename, binmode => ':raw');
-my @bytes = split //, $scalarBytes;
-my $berTokens = ber_decode(\@bytes);
+sub Decode {
+	my $self = shift;
+	my $bytes = shift; #arrayRef<byte>
 
-ber_formatter_format($berTokens, 1, 1);
+	my $berTokens = [];
 
-#------------------------
+	while (@$bytes) {
+		my $byte = shift @$bytes;
+
+		my $type = ber_getType($byte);
+		my $length = ber_getLength($bytes);
+		my @valueRaw = splice @$bytes, 0, $length;
+        my $value = ber_getValue($self, $type, \@valueRaw);
+
+		my $berToken = {
+			type => $type,
+			length => $length,
+			value => $value
+		};
+
+		push @$berTokens, $berToken;
+	}
+
+	return $berTokens;
+}
 
 
 sub ber_getTag {
@@ -117,14 +133,13 @@ sub ber_getLength {
 
 	my $firstBit = substr($bitString, 0, 1); # [0]0000000
 	if ($firstBit eq "0") {
-		#YAY! Short form, we're done. return the size of the remaining 7 bits.
+		#Yay! Short form, we're done. return the size of the remaining 7 bits.
 		return $remainingLengthNumber;
 	}
 	else {
-		#UH-OH, long form. Now we have to do some work :(
+		#Uh-oh, long form. Now we have to do some work :(
 		#our 7 bit integer tells us how many remaining octects to string together to form our unsigned integer
-		#this means we can have an integer as large as 127 (max 7 bit number) * 8 bits per octet = 1016 bit integer.
-		#i've written this implementation to use a maximum of 32bit unsigned integer, if your number is bigger than that...good luck.
+		#i've written this implementation to use a maximum of 32bit unsigned integer
 
 		my $octetBuilder = "";
 
@@ -150,66 +165,14 @@ sub ber_getLength {
 	}
 }
 
-sub ber_formatter_format {
-
-	my $berTokens = shift;
-	my $printHeader = shift || 0;
-	my $groupOidWithValue = shift || 0;
-	my $indent = shift || 0;
-
-
-
-	my $oidValue = 0;
-	foreach my $token (@$berTokens) {
-		#set each iteration for oid groupings
-		my $tabs = " " x 4 x $indent;
-
-		if ($token->{type}->{constructed} eq "Constructed") {
-			if ($printHeader == 1) {
-				say $tabs . "(". $token->{type}->{tag} . ", " . $token->{length}  . ")";
-			}
-			ber_formatter_format($token->{value}, $printHeader, $groupOidWithValue, $indent + 1);
-		}
-		else {
-			#if this is an oid value, it should be beside the oid key and should not be tabbed.
-			if ($oidValue == 1) {
-				$tabs = "";
-				$oidValue = 0;
-			}
-
-			#for 'universal' class use empty string as default
-			my $classToPrint = "";
-
-=to debug we want to print out universal
-=the next $classToPrint will be removed
-			if ($token->{type}->{class} ne "Universal") {
-				$classToPrint = $token->{type}->{class} . "|"
-			}
-=cut
-
-			$classToPrint = $token->{type}->{bits} . "|" . $token->{type}->{class};
-
-			print $tabs . "[". $classToPrint . $token->{type}->{tag} . ", " . $token->{length} . "]: " . $token->{value};
-
-			#end of line char
-			if ($groupOidWithValue == 1 && $token->{type}->{tag} eq "OBJECT IDENTIFIER") {
-				print " = ";
-				$oidValue = 1;
-			}
-			else {
-				print "\n";
-			}
-		}
-	}
-}
-
 sub ber_getValue {
+	my $self = shift;
     my $type = shift; #hashRef(berType)
     my $bytes = shift; #arrayRef<byte>
 
     my $value;
     if ($type->{constructed} eq "Constructed") {
-        $value = ber_decode($bytes);
+        $value = $self->Decode($bytes);
     }
     elsif ($type->{tag} eq "OBJECT IDENTIFIER") {
         $value = ber_content_getOid($bytes);
@@ -229,30 +192,7 @@ sub ber_getValue {
     return $value;
 }
 
-sub ber_decode {
-	my $bytes = shift; #arrayRef<byte>
 
-	my $berTokens = [];
-
-	while (@$bytes) {
-		my $byte = shift @$bytes;
-
-		my $type = ber_getType($byte);
-		my $length = ber_getLength($bytes);
-		my @valueRaw = splice @$bytes, 0, $length;
-        my $value = ber_getValue($type, \@valueRaw);
-
-		my $berToken = {
-			type => $type,
-			length => $length,
-			value => $value
-		};
-
-		push @$berTokens, $berToken;
-	}
-
-	return $berTokens;
-}
 
 sub ber_content_getBitStr {
 	my $bytes = shift;
@@ -298,8 +238,8 @@ sub convertFromVLQ {
     my $firstByte = shift @$bytes;
     my $bitString = unpack "B*", $firstByte;
 
-    my $firstBit = substr $bitString, 0, 1;
-    my $remainingBits = substr $bitString, 1, 7;
+    my $firstBit = substr $bitString, 0, 1; #[0]0000000
+    my $remainingBits = substr $bitString, 1, 7; #0[0000000]
 
     if ($firstBit eq '0') {
 		my $remainingByte = pack "B*", '0' . $remainingBits;
@@ -333,22 +273,4 @@ sub convertFromVLQ {
 
 }
 
-
-sub printOctetOld {
-	my $octet = shift;
-
-	my $letter = pack("B8", $octet);
-	my $number = unpack("C", $letter);
-	say "$octet $letter $number";
-}
-
-sub convertPemToDer {
-	my $pem = shift;
-
-	$pem =~ s/-----BEGIN CERTIFICATE-----//;
-	$pem =~ s/-----END CERTIFICATE-----//;
-	$pem =~ s/\n//g;
-	$pem =~ s/\r//g;
-
-	return decode_base64($pem);
-}
+return 1;

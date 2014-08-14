@@ -20,7 +20,7 @@ sub Format {
 
 		if ($token->{type}->{constructed} eq "Constructed") {
 			if ($printHeader == 1) {
-				say $tabs . "(". $token->{type}->{tag} . ", " . $token->{length}  . ")";
+				say $tabs . "[". $token->{type}->{tag} . ", " . $token->{length}  . "]";
 			}
 			$self->Format($token->{value}, $printHeader, $groupOidWithValue, $indent + 1);
 		}
@@ -34,14 +34,10 @@ sub Format {
 			#for 'universal' class use empty string as default
 			my $classToPrint = "";
 
-=to debug we want to print out universal
-=the next $classToPrint will be removed
-			if ($token->{type}->{class} ne "Universal") {
-				$classToPrint = $token->{type}->{class} . "|"
-			}
-=cut
 
-			$classToPrint = $token->{type}->{bits} . "|" . $token->{type}->{class};
+			if ($token->{type}->{class} ne "Universal") {
+				$classToPrint = $token->{type}->{bits} . "|" . $token->{type}->{class} . "|"
+			}
 
 			print $tabs . "[". $classToPrint . $token->{type}->{tag} . ", " . $token->{length} . "]: " . $token->{value};
 

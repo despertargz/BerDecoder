@@ -20,6 +20,6 @@ my $berDecoder = BerDecoder->New();
 my $berTokens = $berDecoder->Decode(\@bytes);
 
 my $berFormatter = BerFormatter->New();
-my $berText = $berFormatter->Format($berTokens, 1, 1);
+my $berText = $berFormatter->Format($berTokens, 0, 0);
 
 print $berText;

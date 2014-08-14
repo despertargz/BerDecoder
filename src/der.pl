@@ -1,81 +1,22 @@
 use strict;
 use warnings;
 use diagnostics;
-use v5.10;
 
+use v5.10;
+use FindBin qw($Bin);
+
+use File::Slurp;
 use Data::Dumper;
+use MIME::Base64;
 
 package BerDecoder;
 
-sub New {
-	return bless {};
-}
+#------------------------
 
-sub Decode {
-	my $self = shift;
-	my $bytes = shift; #arrayRef<byte>
 
-	my $berTokens = [];
 
-	while (@$bytes) {
-		my $byte = shift @$bytes;
+#------------------------
 
-		my $type = ber_getType($byte);
-		my $length = ber_getLength($bytes);
-		my @valueRaw = splice @$bytes, 0, $length;
-        my $value = ber_getValue($self, $type, \@valueRaw);
-
-		my $berToken = {
-			type => $type,
-			length => $length,
-			value => $value
-		};
-
-		push @$berTokens, $berToken;
-	}
-
-	return $berTokens;
-}
-
-sub ber_getType {
-	my $byte = shift;
-	my $octet = unpack("B8", $byte);
-
-	my $classBits = substr($octet, 0, 2); #[00]000000
-	my $constructedBits = substr($octet, 2, 1); #00[0]00000
-	my $tagBits = substr($octet, 3, 5); #000[00000];
-
-	my $classMap = {
-		'00' => 'Universal',
-		'01' => 'Application',
-		'10' => 'Context-Specific',
-		'11' => 'Private'
-	};
-
-	my $constructedMap = {
-		'0' => 'Primitive',
-		'1' => 'Constructed'
-	};
-
-	$tagBits = "000" . $tagBits; #must pad up to 8 bits so pack can read correctly
-	my $tagByte = pack("B8", $tagBits);
-	my $tagNumber = unpack("C", $tagByte);
-	my $tagName = ber_getTag($tagNumber);
-
-	my $type = {
-		class => $classMap->{$classBits},
-		constructed => $constructedMap->{$constructedBits},
-		tag => $tagName,
-		bits => $octet
-	};
-
-	#If it is not universal, then we can't know tag type so set these to unknown
-	if ($type->{class} ne "Universal") {
-		$type->{tag} = "UNKNOWN";
-		$type->{constructed} = "Primitive";
-	}
-	return $type;
-}
 
 sub ber_getTag {
 	my $number = shift;
@@ -119,11 +60,48 @@ END
 	return $tagList[$number];
 }
 
+sub ber_getType {
+	my $byte = shift;
+	my $octet = unpack("B8", $byte);
 
+	my $classBits = substr($octet, 0, 2); #[00]000000
+	my $constructedBits = substr($octet, 2, 1); #00[0]00000
+	my $tagBits = substr($octet, 3, 5); #000[00000];
+
+	my $classMap = {
+		'00' => 'Universal',
+		'01' => 'Application',
+		'10' => 'Context-Specific',
+		'11' => 'Private'
+	};
+
+	my $constructedMap = {
+		'0' => 'Primitive',
+		'1' => 'Constructed'
+	};
+
+	$tagBits = "000" . $tagBits; #must pad up to 8 bits so pack can read correctly
+	my $tagByte = pack("B8", $tagBits);
+	my $tagNumber = unpack("C", $tagByte);
+	my $tagName = ber_getTag($tagNumber);
+
+	my $type = {
+		class => $classMap->{$classBits},
+		constructed => $constructedMap->{$constructedBits},
+		tag => $tagName,
+		bits => $octet
+	};
+
+	#If it is not universal, then we can't know tag type so set these to unknown
+	if ($type->{class} ne "Universal") {
+		$type->{tag} = "UNKNOWN ($octet)";
+		$type->{constructed} = "Primitive";
+	}
+	return $type;
+}
 
 sub ber_getLength {
-	my $bytes = shift; #arrayRef<byte>
-	
+	my $bytes = shift;
 	my $firstByte = shift $bytes;
 
 	my $bitString = unpack("B8", $firstByte);
@@ -152,6 +130,7 @@ sub ber_getLength {
 			$octetBuilder .= $nextBitString;
 		}
 
+		#todo: make constant or readonly
 		my $MAX_BIT_LENGTH = 32;
 		my $bitsShyOfMax = $MAX_BIT_LENGTH - (length $octetBuilder);
 		my $padding = ('0' x $bitsShyOfMax);
@@ -166,14 +145,66 @@ sub ber_getLength {
 	}
 }
 
+sub ber_formatter_format {
+
+	my $berTokens = shift;
+	my $printHeader = shift || 0;
+	my $groupOidWithValue = shift || 0;
+	my $indent = shift || 0;
+
+
+
+	my $oidValue = 0;
+	foreach my $token (@$berTokens) {
+		#set each iteration for oid groupings
+		my $tabs = " " x 4 x $indent;
+
+		if ($token->{type}->{constructed} eq "Constructed") {
+			if ($printHeader == 1) {
+				say $tabs . "(". $token->{type}->{tag} . ", " . $token->{length}  . ")";
+			}
+			ber_formatter_format($token->{value}, $printHeader, $groupOidWithValue, $indent + 1);
+		}
+		else {
+			#if this is an oid value, it should be beside the oid key and should not be tabbed.
+			if ($oidValue == 1) {
+				$tabs = "";
+				$oidValue = 0;
+			}
+
+			#for 'universal' class use empty string as default
+			my $classToPrint = "";
+
+=to debug we want to print out universal
+=the next $classToPrint will be removed
+			if ($token->{type}->{class} ne "Universal") {
+				$classToPrint = $token->{type}->{class} . "|"
+			}
+=cut
+
+			$classToPrint = $token->{type}->{bits} . "|" . $token->{type}->{class};
+
+			print $tabs . "[". $classToPrint . $token->{type}->{tag} . ", " . $token->{length} . "]: " . $token->{value};
+
+			#end of line char
+			if ($groupOidWithValue == 1 && $token->{type}->{tag} eq "OBJECT IDENTIFIER") {
+				print " = ";
+				$oidValue = 1;
+			}
+			else {
+				print "\n";
+			}
+		}
+	}
+}
+
 sub ber_getValue {
-	my $self = shift;
     my $type = shift; #hashRef(berType)
     my $bytes = shift; #arrayRef<byte>
 
     my $value;
     if ($type->{constructed} eq "Constructed") {
-        $value = $self->Decode($bytes);
+        $value = ber_decode($bytes);
     }
     elsif ($type->{tag} eq "OBJECT IDENTIFIER") {
         $value = ber_content_getOid($bytes);
@@ -191,6 +222,31 @@ sub ber_getValue {
     }
 
     return $value;
+}
+
+sub ber_decode {
+	my $bytes = shift; #arrayRef<byte>
+
+	my $berTokens = [];
+
+	while (@$bytes) {
+		my $byte = shift @$bytes;
+
+		my $type = ber_getType($byte);
+		my $length = ber_getLength($bytes);
+		my @valueRaw = splice @$bytes, 0, $length;
+        my $value = ber_getValue($type, \@valueRaw);
+
+		my $berToken = {
+			type => $type,
+			length => $length,
+			value => $value
+		};
+
+		push @$berTokens, $berToken;
+	}
+
+	return $berTokens;
 }
 
 sub ber_content_getBitStr {
@@ -224,21 +280,21 @@ sub ber_content_getOid {
     my @finalBytes = ($nodeFirst, $nodeSecond);
 
     while (@$bytes) {
-        my $num = convertVLQToNumber($bytes);
+        my $num = convertFromVLQ($bytes);
         push @finalBytes, $num;
     }
 
     return join '.', @finalBytes;
 }
 
-sub convertVLQToNumber {
+sub convertFromVLQ {
     my $bytes = shift;
 
     my $firstByte = shift @$bytes;
     my $bitString = unpack "B*", $firstByte;
 
-    my $firstBit = substr $bitString, 0, 1; #[0]0000000
-    my $remainingBits = substr $bitString, 1, 7; #0[0000000]
+    my $firstBit = substr $bitString, 0, 1;
+    my $remainingBits = substr $bitString, 1, 7;
 
     if ($firstBit eq '0') {
 		my $remainingByte = pack "B*", '0' . $remainingBits;
@@ -246,6 +302,7 @@ sub convertVLQToNumber {
         return $remainingInt;
     }
     else {
+
         my $bitBuilder = $remainingBits;
 
         my $nextFirstBit = "1";
@@ -259,7 +316,6 @@ sub convertVLQToNumber {
             $bitBuilder .= $nextSevenBits;
         }
 
-		#padding
         my $MAX_BITS = 32;
         my $missingBits = $MAX_BITS - (length $bitBuilder);
         my $padding = 0 x $missingBits;
@@ -269,6 +325,25 @@ sub convertVLQToNumber {
         my $finalNumber = unpack "N", $finalByte;
         return $finalNumber;
     }
+
 }
 
-return 1;
+
+sub printOctetOld {
+	my $octet = shift;
+
+	my $letter = pack("B8", $octet);
+	my $number = unpack("C", $letter);
+	say "$octet $letter $number";
+}
+
+sub convertPemToDer {
+	my $pem = shift;
+
+	$pem =~ s/-----BEGIN CERTIFICATE-----//;
+	$pem =~ s/-----END CERTIFICATE-----//;
+	$pem =~ s/\n//g;
+	$pem =~ s/\r//g;
+
+	return decode_base64($pem);
+}

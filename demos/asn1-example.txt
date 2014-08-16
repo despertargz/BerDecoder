@@ -1,0 +1,7 @@
+Client ::= SEQUENCE {
+	name      PrintableString(SIZE (1..20)),
+	street    PrintableString(SIZE (1..50)) OPTIONAL,
+	postcode  NumericString(SIZE (5)),
+	town      PrintableString(SIZE (1..30)),
+	country   PrintableString(SIZE (1..20)) DEFAULT default-country
+}

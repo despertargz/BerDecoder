@@ -8,7 +8,7 @@ use Data::Dumper;
 
 use HTML::TreeBuilder;
 
-my $url = $ARGV[0];
+my $url = shift @ARGV;
 my @rows = downloadAllTables($url);
 foreach (@rows) {
 	say $_;

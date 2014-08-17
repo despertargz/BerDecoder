@@ -1,9 +1,0 @@
-translate OID's to names
-clean up method names
-pass hashref to formatter
-setup tests
--hello, world
-
-find out what application-specific tags are
-what does bit string represent?
-double check against known decoded document

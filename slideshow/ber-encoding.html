@@ -48,7 +48,6 @@
 <h3>Christopher Mevissen</h3>
 </div>
 
-
 <div class="slide">
 	<h1>What is it?</h1>
 	<ul class="incremental">
@@ -59,8 +58,16 @@
 		<li>Not the only encoding for ASN.1 (XER)</li>
 		<li>Standardized in <a href="http://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf">X.690</a></li>
 	</ul>
-	<div class="handout">
-	</div>
+</div>
+<div class="slide">
+	<h1>DER vs BER</h1>
+	<ul class="incremental">
+		<li>Distinguished Encoding Rules</li>
+		<li>A subset of BER. Anything that is valid DER is also valid BER</li>
+		<li>Length encoding must use the definite form</li>
+		<li>Bitstring, octetstring, and restricted character strings must use the primitive encoding</li>
+		<li>Elements of a Set are encoded in sorted order, based on their tag value</li>
+	</ul>
 </div>
 <div class="slide">
 	<h1>ASN.1</h1>
@@ -71,8 +78,6 @@
 		<li>Independent of any programming language</li>
 		<li>Standardized in <a href="https://www.itu.int/ITU-T/studygroups/com17/languages/X.680-0207.pdf">X.680</a></li>
 	</ul>
-	<div class="handout">
-	</div>
 </div>
 <div class="slide">
 	<h1>Who?</h1>
@@ -80,16 +85,15 @@
 		<li>ITU-T - Telecommunication Standardization Sector of ITU ( International Telecommunication Union)</li>
 		<li>Coordinates standards for telecommunications.</li>
 		<li>The standardization work of ITU dates back to 1865 </li>
+		<li><a href="http://www.itu.int/ITU-T/recommendations/index.aspx?ser=X">ITU-T Standards</a></li>
 	</ul>
-	<div class="handout">
-	</div>
 </div>
 <div class="slide">
 	<h1>Where is ASN.1 used?</h1>
 	<ul class="incremental">
 		<li>Cell Phones</li>
 		<li>LDAP</li>
-		<li>X509 Certificate</li>
+		<li>X509 Certificate (also PEM)</li>
 		<li>Get cash from ATM</li>
 		<li>FedEx package tracking</li>
 	</ul>
@@ -197,20 +201,39 @@
 </div>
 <div class="slide">
 	<h1>Length</h1>
-	<ul>
+	<ul class="incremental">
 		<li>Short Form - [0]XXXXXXX (0 - 127 bytes)</li>
-		<li>Long Form - [1]XXXXXXX (128 - 2^1016 bytes)</li>
+		<li>Long Form - [1]XXXXXXX (128 - 5 e+151 bytes)</li>
 		<li>Indefinite Form - [1]0000000 </li>
 	</ul>
-	<div class="handout">
-	</div>
+</div>
+<div class="slide">
+	<h1>Value</h1>
+	<ul>
+		<li>Take the next x bytes and decode based on type</li>
+	</ul>
+</div>
+<div class="slide">
+	<h1>OID</h1>
+	<ul class="incremental">
+		<li>Object Identifier</li>
+		<li>1.2.840.113549.1.1.1 = rsaEncryption</li>
+		<li>iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-1(1) rsaEncryption(1)</li>
+		<li>First byte determines first two digits</li>
+		<li>Subsequent bytes that start with 0 are converted to integers</li>
+		<li>Bytes that start with 1 and concatenated until a most-significant bit is 0 then converted to integer</li>
+		<li>OIDs can be looked up <a href="http://www.oid-info.com/">here</a>
+	</ul>
 </div>
 <div class="slide">
 	<h1>References</h1>
 	<ul>
+		<li>A Layman's Guide to a Subset of ASN.1, BER, and DER - http://luca.ntop.org/Teaching/Appunti/asn1.html</li>
+		<li>BER Info - http://en.wikipedia.org/wiki/X.690</li>
+		<li>Variable Length Quantity - http://en.wikipedia.org/wiki/Variable-length_quantity</li>
+		<li>ITU-T Standards - http://www.itu.int/ITU-T/recommendations/index.aspx?ser=X</li>
+		<li>Slideshow software - http://meyerweb.com/eric/tools/s5/</li>
 	</ul>
-	<div class="handout">
-	</div>
 </div>
 
 

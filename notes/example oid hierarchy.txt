@@ -1,6 +1,0 @@
-1.2.840.113549.1.1 - PKCS-1
-1.2.840.113549.1 - PKCS
-1.2.840.113549 - RSADSI
-1.2.840 - USA
-1.2 - ISO member body
-1 - ISO assigned OIDs 
